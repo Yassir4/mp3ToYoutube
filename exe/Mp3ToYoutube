@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require "Mp3ToYoutube"
+Mp3ToYoutube::Mp3Uploader.start(ARGV)
