@@ -1,3 +1,4 @@
+require 'yt'
 require 'thor'
 
 
@@ -10,7 +11,8 @@ module Mp3ToYoutube
         audioInfo = generate_audio_info(mp3_path)
         video_background = generate_video_background(audioInfo)
         video_file = generate_video_file(mp3_path, video_background)
-        upload_video_to_youtube video_file , audioInfo
+        upload_video_to_youtube(video_file , audioInfo)
+        delete_created_files(audioInfo, video_background, video_file)
       else
         raise "mp3 file not found"
       end
@@ -50,13 +52,28 @@ module Mp3ToYoutube
 
 
     def upload_video_to_youtube video_file , audioInfo
-    puts "Uploading the video to Youtube"
-    video_title =  `mediainfo --Inform='General;%Title% - %Artist%' #{audioInfo}`.delete! "\n"
-    video_description = `mediainfo --Inform='General;%Album% - %Artist%' #{audioInfo}`.delete! "\n"
-    @account = Yt::Account.new refresh_token: "1/mO3TS_qEg1ETwS187y7h9pNHAoVtDlyhfMFZQHVD-ok"
-    @account.upload_video(videofile, privacy_status: 'public', title:  video_title, 
-                          description:  video_description)
-    puts "Video is uploaded successfully"
+      puts "Uploading the video to Youtube"
+      video_title =  `mediainfo --Inform='General;%Title% - %Artist%' #{audioInfo}`.delete! "\n"
+      video_description = `mediainfo --Inform='General;%Album% - %Artist%' #{audioInfo}`.delete! "\n"
+      # connecting to youtube api
+      Yt.configure do |config|
+        config.client_id = "your client ID"
+        config.client_secret = "Your Client Secret"
+        config.log_level = :debug
+      end
+      # pushing the video to youtube with the proper title and description
+      @account = Yt::Account.new refresh_token: "Your refresh token"
+      @account.upload_video(video_file, privacy_status: 'public', title:  video_title, 
+                            description:  video_description)
+      puts "Video is uploaded successfully"
     end
+  
+
+    def delete_created_files audioInfo, video_background, video_file
+      File.delete(audioInfo.to_s)
+      File.delete(video_background.to_s)
+      File.delete(video_file.to_s)
+    end
+
   end
 end
